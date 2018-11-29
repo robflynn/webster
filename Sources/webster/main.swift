@@ -2,61 +2,110 @@ import Foundation
 import SwiftyBeaver
 
 let logger = SwiftyBeaver.self
-logger.addDestination(ConsoleDestination())
+logger.addDestination(ConsoleDestination())    
 
-print("hi. i'm webster. /\\oo/\\")
+var _website: Website?
 
-/**
- * fetchHTML
- *
- * Fetch the HTML for the given url
- *
- * - parameter from: The URL of the page
- **/
-func fetchHTML(from url: URL, completion: ((String) -> Void)?) {
-    var request = URLRequest(url: url)
+let client = WebsterClient()
 
-    request.httpMethod = "GET"
+var pageQueue = 0
 
-    // Set our request headers
-    request.setValue("text/html; charset=utf-8", forHTTPHeaderField: "Accept")
-    request.setValue("text/html; charset=utf-8", forHTTPHeaderField: "Content-Type") 
+func fetchBatch(completion: @escaping ([Page]) -> Void) {
+    guard let website = _website else { 
+        assertionFailure("Make sure the crawler is initialized first. Fix me.")
 
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard
-                let httpResponse = response as? HTTPURLResponse,
-                (200..<300) ~= httpResponse.statusCode,
-                let data = data else {
-                    assertionFailure("Some kind of network request problem happened!")
-
-                    return
-                }
-                guard let html = String(data: data, encoding: .utf8) else {
-                    assertionFailure("We failed on converting the html DATA to STRING.")
-
-                    return
-                }
-
-                print("oh, okay, cool, lets callback")
-                completion?(html)
+        return 
     }
 
-    logger.debug("Fetching url....")
+    client.getBatch(of: Settings.batchSize, from: website) { 
+        if $0.isEmpty {
+            print($0)
+            // We have no more pages
+            print("No more pages to crawl, shutting down...")
 
-    task.resume()
+            exit(0)
+        }
+
+        completion($0)
+    }
 }
 
-let websiteURL = "http://thingerly.com/crawler/"
+func pageCompleted() {
+    print("<===== LEAVING")
 
-print(websiteURL)
+    DispatchQueue.main.async {
+        pageQueue -= 1
 
-guard let url = URL(string: websiteURL) else {
-    exit(0)
+        print("Pages remaining in queue: \(pageQueue)")
+
+        // If we're down to zero then it's time to get more
+        if pageQueue == 0 {
+            // Fire off another batch of requests after a bit of a delay
+            print("Fetching another batch in \(Settings.crawlDelay) seconds... ")
+            DispatchQueue.main.asyncAfter(deadline: .now() + Settings.crawlDelay) {
+                crawlBatch()
+            }
+        }
+    }
 }
 
-fetchHTML(from: url) { html in
-    print("inside the callback")
-    print(html)
+func crawlBatch() {
+    let pageDispatchQueue = DispatchQueue(label: "websterPageQueue", attributes: .concurrent)
+
+    fetchBatch { pages in 
+        // loop through each page and crawl it
+        pageQueue = pages.count
+
+        for page in pages {
+            print("ENTERING ===> ")
+
+            pageDispatchQueue.async {
+                do {
+                    try fetch(from: page.url) { response in
+                        DispatchQueue.main.async {
+                            client.store(page: page, response: response) {
+                                pageCompleted()                            
+                            }
+                        }
+                    }
+                } catch FetchError.InvalidURL(_) {
+                    DispatchQueue.main.async {
+                        client.storeError(for: page, message: "Invalid URL") {
+                            pageCompleted()                        
+                        }
+                    }
+
+                    print("<=== LEAVING")
+                } catch {
+                    // unknown error                
+                    assertionFailure("Some kind of uncaught error")
+
+                    print("<=== LEAVING")
+                    pageCompleted()
+                }
+            }
+        }
+    }
+}
+
+func crawl(website: Website) {
+    _website = website
+
+    crawlBatch()
+}
+
+func initialize() {
+    // say hello, it's the polite thing to do
+    print("hi. i'm webster. /\\oo/\\")    
+
+    client.crawl("Demo Site", startingWith: "http://thingerly.com/crawler") {
+        crawl(website: $0)
+    }
+}
+
+// Initialize our app
+DispatchQueue.main.async {
+    initialize()
 }
 
 dispatchMain()
