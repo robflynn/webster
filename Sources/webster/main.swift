@@ -98,7 +98,7 @@ func initialize() {
     // say hello, it's the polite thing to do
     print("hi. i'm webster. /\\oo/\\")    
 
-    client.crawl("Demo Site", startingWith: "http://thingerly.com/crawler") {
+    client.crawl("Demo Site", startingWith: "https://thingerly.com/crawler") {
         crawl(website: $0)
     }
 }

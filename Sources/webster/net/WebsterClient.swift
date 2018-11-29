@@ -7,10 +7,11 @@ class WebsterClient: JSONAPIClient {
     var baseURLString: String {
         switch self.environment {
             case .local: return "http://localhost:3000/api/v0"
+            case .production: return "http://204.48.20.118/api/v0"
         }
     }
 
-    var environment: APIEnvironment = .local    
+    var environment: APIEnvironment = .production    
 
     func crawl(_ name: String, startingWith urlString: String, completion: ((Website)->())?) {
         let parameters: RequestParameters = [
