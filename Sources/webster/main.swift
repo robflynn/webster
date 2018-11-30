@@ -97,15 +97,30 @@ func crawl(website: Website) {
 func initialize() {
     // say hello, it's the polite thing to do
     print("hi. i'm webster. /\\oo/\\")    
+    print("")
 
-    client.crawl("Demo Site", startingWith: "https://thingerly.com/crawler") {
+    let argCount = CommandLine.argc
+
+    if (argCount < 2) {
+        print("Usage: webster https://example.com")
+        print("")
+        exit(0)
+    }
+
+    let webAddress = CommandLine.arguments[1]
+
+    guard let url = URL(string: webAddress) else {
+        print("")
+        print("Invalid web address: \(webAddress)")
+        print("")
+        exit(0)
+    }
+
+    client.crawl("Demo Site", startingWith: webAddress) {
         crawl(website: $0)
     }
 }
 
-// Initialize our app
-DispatchQueue.main.async {
-    initialize()
-}
+initialize()
 
 dispatchMain()

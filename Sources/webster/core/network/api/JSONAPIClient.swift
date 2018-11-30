@@ -96,6 +96,11 @@ extension JSONAPIClient {
         }        
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
+
+            print(data)
+            print(error)
+            print(response)
+
             guard
                 let httpResponse = response as? HTTPURLResponse,
                 (200..<300) ~= httpResponse.statusCode,
