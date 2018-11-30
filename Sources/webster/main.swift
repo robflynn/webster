@@ -101,15 +101,18 @@ func initialize() {
 
     let argCount = CommandLine.argc
 
-    if (argCount < 2) {
-        print("Usage: webster https://example.com")
+    if (argCount < 3) {
+        print("Usage: webster SiteName SiteUrl")
+        print("")
+        print("Example: webster Example http://example.com")
         print("")
         exit(0)
     }
 
-    let webAddress = CommandLine.arguments[1]
+    let siteName = CommandLine.arguments[1]
+    let webAddress = CommandLine.arguments[2]    
 
-    guard let url = URL(string: webAddress) else {
+    guard let _ = URL(string: webAddress) else {
         print("")
         print("Invalid web address: \(webAddress)")
         print("")

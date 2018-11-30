@@ -11,7 +11,7 @@ class WebsterClient: JSONAPIClient {
         }
     }
 
-    var environment: APIEnvironment = .production    
+    var environment: APIEnvironment = .production
 
     func crawl(_ name: String, startingWith urlString: String, completion: ((Website)->())?) {
         let parameters: RequestParameters = [
