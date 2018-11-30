@@ -121,7 +121,7 @@ func initialize() {
         exit(0)
     }
 
-    client.crawl("Demo Site", startingWith: webAddress) {
+    client.crawl(siteName, startingWith: webAddress) {
         crawl(website: $0)
     }
 }
