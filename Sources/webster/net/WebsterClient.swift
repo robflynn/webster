@@ -7,7 +7,7 @@ class WebsterClient: JSONAPIClient {
     var baseURLString: String {
         switch self.environment {
             case .local: return "http://localhost:3000/api/v0"
-            case .production: return "http://10.136.55.68/api/v0"
+            case .production: return "http://10.136.155.68/api/v0"
         }
     }
 

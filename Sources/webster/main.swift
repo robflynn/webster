@@ -71,8 +71,10 @@ func crawlBatch() {
                 } catch FetchError.InvalidURL(_) {
                     DispatchQueue.main.async {
                         client.storeError(for: page, message: "Invalid URL") {
-                            pageCompleted()                        
+//                            pageCompleted()                        
                         }
+
+                        pageCompleted()
                     }
 
                     print("<=== LEAVING")
